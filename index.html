@@ -6,18 +6,12 @@
   <meta name="theme-color" content="#17212b">
 <!-- The title of your game that shows in the preview card -->
   <title>Jan Run — Protest Escape</title>
-<!-- The description that explains what your game is -->
-<meta name="description" content="Play Jan-Run, a fast-paced 2-bit arcade game built directly in the browser! Can you beat the high score?">
-
-<!-- Open Graph tags (This is what WhatsApp/Discord use) -->
-<meta property="og:title" content="Jan-Run">
-<meta property="og:description" content="Play this awesome 2-bit online video game instantly in your browser!">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://sudheeksh-sadashiv.github.io/Jan-Run/">
-
-<!-- Optional: Link to a thumbnail image (Replace with your actual image path) -->
-<meta property="og:image" content="https://github.io">
-
+  <meta name="description" content="Play Jan-Run, a fast-paced 2-bit arcade game built directly in the browser! Can you beat the high score?">
+  <meta property="og:title" content="Jan-Run">
+  <meta property="og:description" content="Play this awesome 2-bit online video game instantly in your browser!">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sudheeksh-sadashiv.github.io/Jan-Run/">
+  <meta property="og:image" content="https://github.io">
   <style>
     :root {
       color-scheme: dark;
@@ -28,6 +22,7 @@
     }
 
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
 
     body {
       min-height: 100vh;
@@ -48,6 +43,25 @@
       align-items: start;
     }
 
+    .intro {
+      width: min(760px, 100%);
+      min-height: min(680px, calc(100vh - 56px));
+      padding: clamp(24px, 6vw, 64px);
+      border: 4px solid var(--paper);
+      box-shadow: 8px 8px 0 var(--green);
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 22px;
+      text-align: center;
+    }
+    .intro .eyebrow { margin: 0; }
+    .intro h1 { margin: 0; font-size: clamp(56px, 12vw, 96px); }
+    .intro .subtitle { margin: 0; font-size: clamp(18px, 3vw, 24px); }
+    .intro-copy { max-width: 520px; margin: 0; font-size: 16px; line-height: 1.7; }
+    .intro-levels { color: var(--green); font-size: 13px; font-weight: bold; letter-spacing: 1px; line-height: 1.8; }
+    .intro button { min-width: 210px; min-height: 54px; font-size: 17px; }
+
     .screen {
       min-width: 0;
       border: 4px solid var(--paper);
@@ -66,7 +80,7 @@
     aside { padding-top: 2px; }
     .eyebrow, .label {
       color: var(--green);
-      font-size: 12px;
+      font-size: 14px;
       font-weight: bold;
       letter-spacing: 2px;
       text-transform: uppercase;
@@ -74,27 +88,27 @@
 
     h1 {
       margin: 7px 0 5px;
-      font-size: clamp(28px, 4vw, 38px);
+      font-size: clamp(34px, 4.5vw, 44px);
       line-height: .95;
       letter-spacing: -2px;
     }
 
-    .subtitle { margin: 0 0 22px; color: var(--paper); font-size: 13px; line-height: 1.5; }
+    .subtitle { margin: 0 0 22px; color: var(--paper); font-size: 15px; line-height: 1.5; }
     .objective {
       border-top: 2px solid var(--green);
       border-bottom: 2px solid var(--green);
       padding: 13px 0;
       margin-bottom: 17px;
-      font-size: 13px;
+      font-size: 15px;
       line-height: 1.55;
     }
     .objective strong { color: var(--red); }
     .level-progress { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 11px; }
-    .level-progress > span { min-height: 40px; padding: 4px 2px; border: 1px solid var(--green); color: var(--green); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 9px; text-align: center; }
-    .level-progress .level-number { font-size: 10px; }
+    .level-progress > span { min-height: 46px; padding: 4px 2px; border: 1px solid var(--green); color: var(--green); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; text-align: center; }
+    .level-progress .level-number { font-size: 12px; }
     .level-progress span.active { background: var(--green); color: var(--ink); }
     .level-progress span.complete { border-color: var(--paper); color: var(--paper); }
-    .controls { margin: 0 0 18px; padding: 0; list-style: none; font-size: 12px; line-height: 1.9; }
+    .controls { margin: 0 0 18px; padding: 0; list-style: none; font-size: 14px; line-height: 1.9; }
     kbd {
       display: inline-block;
       min-width: 24px;
@@ -107,13 +121,13 @@
 
     .actions { display: flex; gap: 8px; }
     button {
-      min-height: 40px;
+      min-height: 44px;
       padding: 8px 12px;
       border: 2px solid var(--paper);
       border-radius: 0;
       background: var(--ink);
       color: var(--paper);
-      font: bold 12px "Courier New", monospace;
+      font: bold 14px "Courier New", monospace;
       cursor: pointer;
     }
     button:hover, button:focus-visible { outline: none; background: var(--paper); color: var(--ink); }
@@ -152,9 +166,18 @@
   </style>
 </head>
 <body>
-  <main class="game">
+  <section class="intro" id="intro-screen" aria-labelledby="intro-title">
+    <p class="eyebrow">Prove your Gen-Z level</p>
+    <h1 id="intro-title">Jan<br>Run</h1>
+    <p class="subtitle">Escape the Gyanu Gang</p>
+    <p class="intro-copy">Make your way from the protest to the exit, dodge You Know Who, and survive all five increasingly challenging levels.</p>
+    <div class="intro-levels" aria-label="Game levels">NOOB &rarr; EASY &rarr; AVERAGE &rarr; GOOD &rarr; LEGEND</div>
+    <button id="start-game" type="button">START GAME</button>
+    <p class="intro-copy">Move with <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or the arrow keys.</p>
+  </section>
+  <main class="game" id="game-screen" hidden>
     <section class="screen" aria-label="Protest escape game">
-      <canvas id="game" width="960" height="640" aria-label="Top-down escape game. Use the arrow keys or WASD to reach the green exit and avoid police."></canvas>
+      <canvas id="game" width="960" height="640" aria-label="Top-down escape game. Use the arrow keys or WASD to reach the green exit and avoid You Know Who."></canvas>
     </section>
     <aside>
       <div class="heading">
@@ -164,7 +187,7 @@
       </div>
       <div>
         <div class="label">Your mission</div>
-        <div class="objective">Escape the <strong>protest</strong> through the green <strong>EXIT</strong>. Each level moves both locations, expands the arena and adds more police and obstacles.
+        <div class="objective">Escape the <strong>protest</strong> through the green <strong>EXIT</strong>. Each level moves both locations, expands the arena and brings in more You Know Who and obstacles.
           <div class="level-progress" id="level-progress" aria-label="Five difficulty levels">
             <span><span class="level-number">1</span><span>NOOB</span></span>
             <span><span class="level-number">2</span><span>EASY</span></span>
@@ -178,7 +201,6 @@
         <div class="label">Controls</div>
         <ul class="controls">
           <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / arrows — move</li>
-          <li><kbd>ENTER</kbd> — next level</li>
           <li><kbd>R</kbd> — restart</li>
           <li><kbd>SPACE</kbd> — pause</li>
         </ul>
@@ -186,7 +208,6 @@
       <div class="actions">
         <button id="restart" type="button">RESTART [R]</button>
         <button id="pause" type="button">PAUSE [SPACE]</button>
-        <button id="next-level" type="button" hidden>NEXT LEVEL [ENTER]</button>
       </div>
       <div class="pad" aria-label="Touch movement controls">
         <button type="button" data-dir="up" aria-label="Move up">↑</button>
@@ -201,9 +222,11 @@
     (() => {
       const canvas = document.getElementById("game");
       const ctx = canvas.getContext("2d");
+      const introScreen = document.getElementById("intro-screen");
+      const gameScreen = document.getElementById("game-screen");
+      const startButton = document.getElementById("start-game");
       const restartButton = document.getElementById("restart");
       const pauseButton = document.getElementById("pause");
-      const nextLevelButton = document.getElementById("next-level");
       const C = { ink: "#17212b", paper: "#f2e9d0", red: "#d95d4f", green: "#4e9a83" };
       const center = { x: 480, y: 320 };
       const baseRadius = 278;
@@ -255,6 +278,7 @@
       let lastFrame = 0;
       let animationId;
       const playerRadius = 9;
+      const levelTransitionDuration = 5;
 
       function scalePoint(point, scale) {
         return {
@@ -274,7 +298,7 @@
 
       function transformObstacle(item, scale, layout) {
         const point = transformPoint({ x: item.x + item.w / 2, y: item.y + item.h / 2 }, scale, layout);
-        const swapDimensions = layout.turns % 2 === 1;
+        const swapDimensions = item.type !== "barrier" && layout.turns % 2 === 1;
         const w = (swapDimensions ? item.h : item.w) * scale;
         const h = (swapDimensions ? item.w : item.h) * scale;
         return { ...item, x: point.x - w / 2, y: point.y - h / 2, w, h };
@@ -325,7 +349,6 @@
         setupLevel();
         elapsed = 0;
         mode = "playing";
-        nextLevelButton.hidden = true;
         pauseButton.textContent = "PAUSE [SPACE]";
         draw();
       }
@@ -389,7 +412,7 @@
       function update(dt) {
         if (mode === "escaped" && currentLevel < levels.length - 1) {
           levelCleared += dt;
-          if (levelCleared >= 1.7) startNextLevel();
+          if (levelCleared >= levelTransitionDuration) startNextLevel();
           else draw();
           return;
         }
@@ -518,10 +541,10 @@
 
         const closest = Math.min(...police.map(officer => Math.hypot(player.x - officer.x, player.y - officer.y)));
         rect(18, 16, 188, 38, C.ink);
-        text(closest < 100 ? "DANGER: THEY SEE YOU" : "KEEP MOVING", 30, 31, 13, closest < 100 ? C.red : C.paper, "left");
+        text(closest < 100 ? "DANGER: THEY SEE YOU" : "Bhaaagooooo...", 30, 31, 15, closest < 100 ? C.red : C.paper, "left");
         text(`${Math.floor(elapsed / 60).toString().padStart(2, "0")}:${Math.floor(elapsed % 60).toString().padStart(2, "0")}`, 925, 33, 17, C.paper, "right");
         text(`LEVEL ${currentLevel + 1} / ${levels.length}  ${levels[currentLevel].name}`, 480, 32, 14, C.paper);
-        text("ARROWS / WASD TO MOVE", 480, 605, 12, C.paper);
+        text("ARROWS / WASD TO MOVE", 480, 605, 15, C.paper);
 
         if (mode === "paused" || mode === "escaped" || mode === "caught" || mode === "complete") {
           rect(0, 0, canvas.width, canvas.height, C.ink);
@@ -533,7 +556,8 @@
           text(title, 480, mode === "complete" ? 278 : 280, mode === "complete" ? 21 : 34, mode === "escaped" || mode === "complete" ? C.green : mode === "caught" ? C.red : C.paper);
           if (mode === "complete") text("INQUILAB ZINDABAD", 480, 326, 17, C.red);
           else text(subtitle, 480, 326, 15, C.paper);
-          text(mode === "escaped" ? "PRESS ENTER OR NEXT LEVEL TO CONTINUE" : "PRESS R OR RESTART TO PLAY AGAIN", 480, 373, 13, C.paper);
+          const transitionText = `NEXT LEVEL STARTING IN ${Math.ceil(levelTransitionDuration - levelCleared)}...`;
+          text(mode === "escaped" ? transitionText : "PRESS R OR RESTART TO PLAY AGAIN", 480, 373, 13, C.paper);
         }
       }
 
@@ -562,7 +586,6 @@
         setupLevel();
         mode = "playing";
         elapsed = 0;
-        nextLevelButton.hidden = true;
         pauseButton.textContent = "PAUSE [SPACE]";
         lastFrame = performance.now();
         draw();
@@ -570,16 +593,20 @@
 
       document.addEventListener("keydown", event => {
         if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
+        if (mode === "intro") return;
         if (event.key.toLowerCase() === "r") reset();
-        else if (event.key === "Enter") startNextLevel();
         else if (event.code === "Space" && !event.repeat) togglePause();
         else keys.add(event.key.length === 1 ? event.key.toLowerCase() : event.key);
       });
       document.addEventListener("keyup", event => keys.delete(event.key.length === 1 ? event.key.toLowerCase() : event.key));
       window.addEventListener("blur", () => keys.clear());
+      startButton.addEventListener("click", () => {
+        introScreen.hidden = true;
+        gameScreen.hidden = false;
+        reset();
+      });
       restartButton.addEventListener("click", reset);
       pauseButton.addEventListener("click", togglePause);
-      nextLevelButton.addEventListener("click", startNextLevel);
       document.querySelectorAll(".pad button").forEach(button => {
         const dir = button.dataset.dir;
         const mapping = { up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight" };
@@ -594,7 +621,9 @@
         button.addEventListener("lostpointercapture", release);
       });
 
-      reset();
+      setupLevel();
+      elapsed = 0;
+      mode = "intro";
       animationId = requestAnimationFrame(frame);
       window.addEventListener("pagehide", () => cancelAnimationFrame(animationId), { once: true });
     })();
