@@ -170,14 +170,14 @@
     <p class="eyebrow">Prove your Gen-Z level</p>
     <h1 id="intro-title">Jan<br>Run</h1>
     <p class="subtitle">Escape the Gyanu Gang</p>
-    <p class="intro-copy">Make your way from the protest to the exit, dodge You Know Who, and survive all five increasingly challenging levels.</p>
+    <p class="intro-copy">Make your way from the protest to the exit, dodge 'You Know Who', and survive all five increasingly challenging levels.</p>
     <div class="intro-levels" aria-label="Game levels">NOOB &rarr; EASY &rarr; AVERAGE &rarr; GOOD &rarr; LEGEND</div>
     <button id="start-game" type="button">START GAME</button>
     <p class="intro-copy">Move with <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> or the arrow keys.</p>
   </section>
   <main class="game" id="game-screen" hidden>
     <section class="screen" aria-label="Protest escape game">
-      <canvas id="game" width="960" height="640" aria-label="Top-down escape game. Use the arrow keys or WASD to reach the green exit and avoid You Know Who."></canvas>
+      <canvas id="game" width="960" height="640" aria-label="Top-down escape game. Use the arrow keys or WASD to reach the green exit and avoid 'You Know Who'."></canvas>
     </section>
     <aside>
       <div class="heading">
@@ -187,7 +187,7 @@
       </div>
       <div>
         <div class="label">Your mission</div>
-        <div class="objective">Escape the <strong>protest</strong> through the green <strong>EXIT</strong>. Each level moves both locations, expands the arena and brings in more You Know Who and obstacles.
+        <div class="objective">Escape the <strong>protest</strong> through the green <strong>EXIT</strong>. Each level moves both locations, expands the arena and brings in more 'You Know Who' and obstacles.
           <div class="level-progress" id="level-progress" aria-label="Five difficulty levels">
             <span><span class="level-number">1</span><span>NOOB</span></span>
             <span><span class="level-number">2</span><span>EASY</span></span>
@@ -233,7 +233,7 @@
       const levels = [
         { name: "NOOB", radius: 258, playerStart: { x: 270, y: 440 }, exitAngle: -Math.PI / 4, layout: { turns: 0 }, police: 2, speed: 32, chaseSpeed: 50, chaseRange: 70, extra: [] },
         { name: "EASY", radius: 268, playerStart: { x: 270, y: 240 }, exitAngle: Math.PI / 4, layout: { turns: 1 }, police: 4, speed: 54, chaseSpeed: 78, chaseRange: 115, extra: [{ x: 675, y: 370, w: 42, h: 12, type: "barrier" }] },
-        { name: "AVERAGE", radius: 278, playerStart: { x: 690, y: 320 }, exitAngle: 3 * Math.PI / 4, layout: { turns: 2 }, police: 5, speed: 72, chaseSpeed: 101, chaseRange: 155, extra: [{ x: 360, y: 292, w: 50, h: 12, type: "barrier" }, { x: 675, y: 370, w: 42, h: 12, type: "barrier" }] },
+        { name: "AVERAGE", radius: 278, playerStart: { x: 690, y: 180 }, exitAngle: 3 * Math.PI / 4, layout: { turns: 2 }, police: 5, speed: 72, chaseSpeed: 101, chaseRange: 155, extra: [{ x: 360, y: 292, w: 50, h: 12, type: "barrier" }, { x: 675, y: 370, w: 42, h: 12, type: "barrier" }] },
         { name: "GOOD", radius: 289, playerStart: { x: 680, y: 400 }, exitAngle: -3 * Math.PI / 4, layout: { turns: 3 }, police: 6, speed: 86, chaseSpeed: 122, chaseRange: 180, extra: [{ x: 360, y: 292, w: 50, h: 12, type: "barrier" }, { x: 675, y: 370, w: 42, h: 12, type: "barrier" }, { x: 480, y: 500, w: 62, h: 12, type: "barrier" }] },
         { name: "LEGEND", radius: 300, playerStart: { x: 480, y: 530 }, exitAngle: -Math.PI / 2, layout: { turns: 0, mirrorX: true }, police: 7, speed: 98, chaseSpeed: 140, chaseRange: 205, extra: [{ x: 360, y: 292, w: 50, h: 12, type: "barrier" }, { x: 675, y: 370, w: 42, h: 12, type: "barrier" }, { x: 480, y: 500, w: 62, h: 12, type: "barrier" }, { x: 485, y: 152, w: 62, h: 12, type: "barrier" }] }
       ];
@@ -429,6 +429,13 @@
           moveActor(player, dx / length * player.speed * dt, dy / length * player.speed * dt, playerRadius);
         }
 
+        const fromCenter = Math.hypot(player.x - center.x, player.y - center.y);
+        if (fromCenter >= radius - playerRadius - 1 && angleToExit(player.x, player.y) < 0.19) {
+          mode = currentLevel === levels.length - 1 ? "complete" : "escaped";
+          draw();
+          return;
+        }
+
         for (const officer of police) {
           movePolice(officer, dt);
           if (Math.hypot(player.x - officer.x, player.y - officer.y) < 17) {
@@ -437,11 +444,6 @@
           }
         }
 
-        const fromCenter = Math.hypot(player.x - center.x, player.y - center.y);
-        if (fromCenter >= radius - playerRadius - 1 && angleToExit(player.x, player.y) < 0.19) {
-          mode = currentLevel === levels.length - 1 ? "complete" : "escaped";
-          nextLevelButton.hidden = mode !== "escaped";
-        }
         draw();
       }
 
@@ -511,8 +513,8 @@
         rect(-31, -11, 62, 22, C.paper);
         rect(-25, -7, 50, 14, C.green);
         ctx.restore();
-        text("EXIT", exit.x - Math.cos(exitAngle) * 28, exit.y - Math.sin(exitAngle) * 28, 15, C.paper);
-        text("PROTEST", protest.x, protest.y + 45, 13, C.paper);
+        text("EXIT", exit.x - Math.cos(exitAngle) * 28, exit.y - Math.sin(exitAngle) * 28, 18, C.paper);
+        text("PROTEST", protest.x, protest.y + 45, 16, C.paper);
         rect(protest.x - 8, protest.y + 19, 5, 13, C.red);
         rect(protest.x + 2, protest.y + 15, 5, 17, C.red);
         rect(protest.x + 12, protest.y + 22, 5, 10, C.red);
@@ -540,24 +542,24 @@
         drawPerson(player.x, player.y, C.paper, true);
 
         const closest = Math.min(...police.map(officer => Math.hypot(player.x - officer.x, player.y - officer.y)));
-        rect(18, 16, 188, 38, C.ink);
-        text(closest < 100 ? "DANGER: THEY SEE YOU" : "Bhaaagooooo...", 30, 31, 15, closest < 100 ? C.red : C.paper, "left");
-        text(`${Math.floor(elapsed / 60).toString().padStart(2, "0")}:${Math.floor(elapsed % 60).toString().padStart(2, "0")}`, 925, 33, 17, C.paper, "right");
-        text(`LEVEL ${currentLevel + 1} / ${levels.length}  ${levels[currentLevel].name}`, 480, 32, 14, C.paper);
-        text("ARROWS / WASD TO MOVE", 480, 605, 15, C.paper);
+        rect(18, 16, 250, 38, C.ink);
+        text(closest < 100 ? "DANGER: THEY SEE YOU" : "Bhaaagooooo...", 30, 31, 18, closest < 100 ? C.red : C.paper, "left");
+        text(`${Math.floor(elapsed / 60).toString().padStart(2, "0")}:${Math.floor(elapsed % 60).toString().padStart(2, "0")}`, 925, 33, 20, C.paper, "right");
+        text(`LEVEL ${currentLevel + 1} / ${levels.length}  ${levels[currentLevel].name}`, 480, 32, 17, C.paper);
+        text("ARROWS / WASD TO MOVE", 480, 605, 18, C.paper);
 
         if (mode === "paused" || mode === "escaped" || mode === "caught" || mode === "complete") {
           rect(0, 0, canvas.width, canvas.height, C.ink);
           ctx.globalAlpha = 0.86;
           rect(0, 0, canvas.width, canvas.height, C.ink);
           ctx.globalAlpha = 1;
-          const title = mode === "escaped" ? `${levels[currentLevel].name} CLEARED!` : mode === "complete" ? "Congratulations! You are now a pro-level Citizen" : mode === "caught" ? "YOU'RE BEING DETAINED" : "PAUSED";
-          const subtitle = mode === "escaped" ? `NEXT UP: ${levels[currentLevel + 1].name}` : mode === "caught" ? "THE CROWD WILL TRY AGAIN." : "PRESS SPACE TO GET MOVING";
-          text(title, 480, mode === "complete" ? 278 : 280, mode === "complete" ? 21 : 34, mode === "escaped" || mode === "complete" ? C.green : mode === "caught" ? C.red : C.paper);
-          if (mode === "complete") text("INQUILAB ZINDABAD", 480, 326, 17, C.red);
-          else text(subtitle, 480, 326, 15, C.paper);
+          const title = mode === "escaped" ? `${levels[currentLevel].name} CLEARED!` : mode === "complete" ? "Congratulations! You're now a Constitution-approved Citizen" : mode === "caught" ? "YOU'VE BEEN DETAINED" : "PAUSED";
+          const subtitle = mode === "escaped" ? `NEXT UP: ${levels[currentLevel + 1].name}` : mode === "caught" ? "DON'T LOSE HOPE! KEEP UP THE FIGHT" : "PRESS SPACE TO GET MOVING";
+          text(title, 480, mode === "complete" ? 278 : 280, mode === "complete" ? 25 : 40, mode === "escaped" || mode === "complete" ? C.green : mode === "caught" ? C.red : C.paper);
+          if (mode === "complete") text("INQUILAB ZINDABAD", 480, 326, 20, C.red);
+          else text(subtitle, 480, 326, 18, C.paper);
           const transitionText = `NEXT LEVEL STARTING IN ${Math.ceil(levelTransitionDuration - levelCleared)}...`;
-          text(mode === "escaped" ? transitionText : "PRESS R OR RESTART TO PLAY AGAIN", 480, 373, 13, C.paper);
+          text(mode === "escaped" ? transitionText : "PRESS R OR RESTART TO PLAY AGAIN", 480, 373, 16, C.paper);
         }
       }
 
