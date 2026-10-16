@@ -69,6 +69,21 @@
       box-shadow: 8px 8px 0 var(--green);
     }
 
+    .completion-screen {
+      min-height: 560px;
+      padding: clamp(20px, 4vw, 36px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+    }
+    .completion-screen h2 { margin: 0; color: var(--green); font-size: clamp(21px, 3vw, 30px); line-height: 1.3; }
+    .completion-screen .completion-slogan { margin: 0; color: var(--red); font-size: 20px; font-weight: bold; }
+    .completion-screen .completion-message { max-width: 560px; margin: 0; font-size: 16px; line-height: 1.5; }
+    .completion-screen img { display: block; width: clamp(170px, 22vw, 230px); max-width: 100%; height: auto; border: 2px solid var(--paper); background: #fff; }
+
     canvas {
       display: block;
       width: 100%;
@@ -155,6 +170,8 @@
       .objective { margin-bottom: 8px; }
       .controls { margin-bottom: 8px; }
       .pad { display: grid; }
+      .completion-screen { min-height: 480px; }
+      .completion-screen img { width: clamp(160px, 42vw, 210px); }
     }
     @media (max-width: 420px) {
       body { padding: 10px; }
@@ -178,6 +195,13 @@
   <main class="game" id="game-screen" hidden>
     <section class="screen" aria-label="Protest escape game">
       <canvas id="game" width="960" height="640" aria-label="Top-down escape game. Use the arrow keys or WASD to reach the green exit and avoid 'You Know Who'."></canvas>
+      <div class="completion-screen" id="completion-screen" hidden>
+        <h2>Congratulations! You're now a Constitution-approved Citizen</h2>
+        <p class="completion-slogan">INQUILAB ZINDABAD</p>
+        <p class="completion-message">If you liked this game, do give a follow on the Instagram page by scanning the below code</p>
+        <img src="assets/QR_Clown.s2Cents.png" alt="Instagram QR code" width="4096" height="6001">
+        <p class="completion-message">PRESS R OR RESTART TO PLAY AGAIN</p>
+      </div>
     </section>
     <aside>
       <div class="heading">
@@ -222,6 +246,7 @@
     (() => {
       const canvas = document.getElementById("game");
       const ctx = canvas.getContext("2d");
+      const completionScreen = document.getElementById("completion-screen");
       const introScreen = document.getElementById("intro-screen");
       const gameScreen = document.getElementById("game-screen");
       const startButton = document.getElementById("start-game");
@@ -537,6 +562,13 @@
       }
 
       function draw() {
+        if (mode === "complete") {
+          canvas.hidden = true;
+          completionScreen.hidden = false;
+          return;
+        }
+        canvas.hidden = false;
+        completionScreen.hidden = true;
         drawArena();
         for (const officer of police) drawPerson(officer.x, officer.y, C.red);
         drawPerson(player.x, player.y, C.paper, true);
