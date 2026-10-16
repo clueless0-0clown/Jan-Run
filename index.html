@@ -446,7 +446,6 @@
         const fromCenter = Math.hypot(player.x - center.x, player.y - center.y);
         if (fromCenter >= radius - playerRadius - 1 && angleToExit(player.x, player.y) < 0.19) {
           mode = currentLevel === levels.length - 1 ? "complete" : "escaped";
-          nextLevelButton.hidden = mode !== "escaped";
         }
         draw();
       }
