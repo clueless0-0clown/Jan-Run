@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17212b">
+  <title>Jan Run — Protest Escape</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #17212b;
+      --paper: #f2e9d0;
+      --red: #d95d4f;
+      --green: #4e9a83;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 28px;
+      display: grid;
+      place-items: center;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: "Courier New", monospace;
+    }
+
+    .game {
+      width: min(1120px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 230px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .screen {
+      min-width: 0;
+      border: 4px solid var(--paper);
+      background: var(--ink);
+      box-shadow: 8px 8px 0 var(--green);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+      touch-action: none;
+    }
+
+    aside { padding-top: 2px; }
+    .eyebrow, .label {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 7px 0 5px;
+      font-size: clamp(28px, 4vw, 38px);
+      line-height: .95;
+      letter-spacing: -2px;
+    }
+
+    .subtitle { margin: 0 0 22px; color: var(--paper); font-size: 13px; line-height: 1.5; }
+    .objective {
+      border-top: 2px solid var(--green);
+      border-bottom: 2px solid var(--green);
+      padding: 13px 0;
+      margin-bottom: 17px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .objective strong { color: var(--red); }
+    .level-progress { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 11px; }
+    .level-progress > span { min-height: 40px; padding: 4px 2px; border: 1px solid var(--green); color: var(--green); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 9px; text-align: center; }
+    .level-progress .level-number { font-size: 10px; }
+    .level-progress span.active { background: var(--green); color: var(--ink); }
+    .level-progress span.complete { border-color: var(--paper); color: var(--paper); }
+    .controls { margin: 0 0 18px; padding: 0; list-style: none; font-size: 12px; line-height: 1.9; }
+    kbd {
+      display: inline-block;
+      min-width: 24px;
+      padding: 1px 4px;
+      border: 1px solid var(--paper);
+      color: var(--paper);
+      text-align: center;
+      font: inherit;
+    }
+
+    .actions { display: flex; gap: 8px; }
+    button {
+      min-height: 40px;
+      padding: 8px 12px;
+      border: 2px solid var(--paper);
+      border-radius: 0;
+      background: var(--ink);
+      color: var(--paper);
+      font: bold 12px "Courier New", monospace;
+      cursor: pointer;
+    }
+    button:hover, button:focus-visible { outline: none; background: var(--paper); color: var(--ink); }
+
+    .pad {
+      display: none;
+      grid-template-columns: repeat(3, 48px);
+      grid-template-rows: repeat(2, 42px);
+      justify-content: center;
+      gap: 5px;
+      margin-top: 12px;
+    }
+    .pad button { min-height: 42px; padding: 0; font-size: 18px; touch-action: none; }
+    .pad [data-dir="up"] { grid-column: 2; }
+    .pad [data-dir="left"] { grid-column: 1; grid-row: 2; }
+    .pad [data-dir="down"] { grid-column: 2; grid-row: 2; }
+    .pad [data-dir="right"] { grid-column: 3; grid-row: 2; }
+
+    @media (max-width: 760px) {
+      body { padding: 16px; }
+      .game { grid-template-columns: 1fr; gap: 16px; }
+      aside { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+      .heading, .actions { grid-column: 1 / -1; }
+      .subtitle { margin-bottom: 12px; }
+      .objective { margin-bottom: 8px; }
+      .controls { margin-bottom: 8px; }
+      .pad { display: grid; }
+    }
+    @media (max-width: 420px) {
+      body { padding: 10px; }
+      .screen { border-width: 3px; box-shadow: 5px 5px 0 var(--green); }
+      aside { grid-template-columns: 1fr; }
+      .heading, .actions { grid-column: auto; }
+      .objective { margin-top: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <section class="screen" aria-label="Protest escape game">
+      <canvas id="game" width="960" height="640" aria-label="Top-down escape game. Use the arrow keys or WASD to reach the green exit and avoid police."></canvas>
+    </section>
+    <aside>
+      <div class="heading">
+        <div class="eyebrow">Prove your Gen-Z level</div>
+        <h1>Jan<br>Run</h1>
+        <p class="subtitle">Escape the Gyanu Gang</p>
+      </div>
+      <div>
+        <div class="label">Your mission</div>
+        <div class="objective">Escape the <strong>protest</strong> through the green <strong>EXIT</strong>. Each level moves both locations, expands the arena and adds more police and obstacles.
+          <div class="level-progress" id="level-progress" aria-label="Five difficulty levels">
+            <span><span class="level-number">1</span><span>NOOB</span></span>
+            <span><span class="level-number">2</span><span>EASY</span></span>
+            <span><span class="level-number">3</span><span>AVG</span></span>
+            <span><span class="level-number">4</span><span>GOOD</span></span>
+            <span><span class="level-number">5</span><span>LEGEND</span></span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="label">Controls</div>
+        <ul class="controls">
+          <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / arrows — move</li>
+          <li><kbd>ENTER</kbd> — next level</li>
+          <li><kbd>R</kbd> — restart</li>
+          <li><kbd>SPACE</kbd> — pause</li>
+        </ul>
+      </div>
+      <div class="actions">
+        <button id="restart" type="button">RESTART [R]</button>
+        <button id="pause" type="button">PAUSE [SPACE]</button>
+        <button id="next-level" type="button" hidden>NEXT LEVEL [ENTER]</button>
+      </div>
+      <div class="pad" aria-label="Touch movement controls">
+        <button type="button" data-dir="up" aria-label="Move up">↑</button>
+        <button type="button" data-dir="left" aria-label="Move left">←</button>
+        <button type="button" data-dir="down" aria-label="Move down">↓</button>
+        <button type="button" data-dir="right" aria-label="Move right">→</button>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("game");
+      const ctx = canvas.getContext("2d");
+      const restartButton = document.getElementById("restart");
+      const pauseButton = document.getElementById("pause");
+      const nextLevelButton = document.getElementById("next-level");
+      const C = { ink: "#17212b", paper: "#f2e9d0", red: "#d95d4f", green: "#4e9a83" };
+      const center = { x: 480, y: 320 };
+      const baseRadius = 278;
+      const levels = [
+        { name: "NOOB", radius: 258, playerStart: { x: 270, y: 440 }, exitAngle: -Math.PI / 4, layout: { turns: 0 }, police: 2, speed: 32, chaseSpeed: 50, chaseRange: 70, extra: [] },
+        { name: "EASY", radius: 268, playerStart: { x: 270, y: 240 }, exitAngle: Math.PI / 4, layout: { turns: 1 }, police: 4, speed: 54, chaseSpeed: 78, chaseRange: 115, extra: [{ x: 675, y: 370, w: 42, h: 12, type: "barrier" }] },
+        { name: "AVERAGE", radius: 278, playerStart: { x: 690, y: 320 }, exitAngle: 3 * Math.PI / 4, layout: { turns: 2 }, police: 5, speed: 72, chaseSpeed: 101, chaseRange: 155, extra: [{ x: 360, y: 292, w: 50, h: 12, type: "barrier" }, { x: 675, y: 370, w: 42, h: 12, type: "barrier" }] },
+        { name: "GOOD", radius: 289, playerStart: { x: 680, y: 400 }, exitAngle: -3 * Math.PI / 4, layout: { turns: 3 }, police: 6, speed: 86, chaseSpeed: 122, chaseRange: 180, extra: [{ x: 360, y: 292, w: 50, h: 12, type: "barrier" }, { x: 675, y: 370, w: 42, h: 12, type: "barrier" }, { x: 480, y: 500, w: 62, h: 12, type: "barrier" }] },
+        { name: "LEGEND", radius: 300, playerStart: { x: 480, y: 530 }, exitAngle: -Math.PI / 2, layout: { turns: 0, mirrorX: true }, police: 7, speed: 98, chaseSpeed: 140, chaseRange: 205, extra: [{ x: 360, y: 292, w: 50, h: 12, type: "barrier" }, { x: 675, y: 370, w: 42, h: 12, type: "barrier" }, { x: 480, y: 500, w: 62, h: 12, type: "barrier" }, { x: 485, y: 152, w: 62, h: 12, type: "barrier" }] }
+      ];
+      let exitAngle;
+      let radius;
+      let exit;
+      let obstacles;
+      let currentLevel = 0;
+      const baseObstacles = [
+        { x: 306, y: 202, w: 116, h: 78, type: "building" },
+        { x: 493, y: 353, w: 105, h: 92, type: "building" },
+        { x: 263, y: 326, w: 90, h: 72, type: "building" },
+        { x: 535, y: 184, w: 112, h: 42, type: "bus" },
+        { x: 354, y: 441, w: 112, h: 42, type: "bus" },
+        { x: 444, y: 299, w: 91, h: 12, type: "barrier" },
+        { x: 609, y: 284, w: 58, h: 12, type: "barrier" },
+        { x: 294, y: 158, w: 62, h: 12, type: "barrier" },
+        { x: 518, y: 473, w: 68, h: 12, type: "barrier" }
+      ];
+      const patrolRoutes = [
+        [{ x: 430, y: 151 }, { x: 485, y: 156 }, { x: 482, y: 246 }, { x: 428, y: 241 }],
+        [{ x: 635, y: 352 }, { x: 654, y: 414 }, { x: 574, y: 430 }, { x: 558, y: 365 }],
+        [{ x: 475, y: 260 }, { x: 515, y: 260 }, { x: 515, y: 282 }, { x: 475, y: 282 }],
+        [{ x: 542, y: 258 }, { x: 588, y: 253 }, { x: 590, y: 320 }, { x: 540, y: 326 }]
+      ];
+      const extraPatrolRoutes = [
+        [{ x: 230, y: 232 }, { x: 278, y: 244 }, { x: 286, y: 298 }, { x: 234, y: 312 }],
+        [{ x: 655, y: 235 }, { x: 700, y: 250 }, { x: 710, y: 330 }, { x: 655, y: 340 }],
+        [{ x: 295, y: 420 }, { x: 330, y: 435 }, { x: 325, y: 500 }, { x: 286, y: 490 }]
+      ];
+      const noobPatrolRoutes = [
+        [{ x: 420, y: 520 }, { x: 500, y: 540 }, { x: 570, y: 520 }, { x: 500, y: 500 }],
+        patrolRoutes[1]
+      ];
+      const keys = new Set();
+      let player;
+      let protest;
+      let police;
+      let mode;
+      let elapsed;
+      let levelCleared;
+      let lastFrame = 0;
+      let animationId;
+      const playerRadius = 9;
+
+      function scalePoint(point, scale) {
+        return {
+          x: center.x + (point.x - center.x) * scale,
+          y: center.y + (point.y - center.y) * scale
+        };
+      }
+
+      function transformPoint(point, scale, layout) {
+        const scaled = scalePoint(point, scale);
+        let dx = scaled.x - center.x;
+        let dy = scaled.y - center.y;
+        if (layout.mirrorX) dx = -dx;
+        for (let turn = 0; turn < layout.turns; turn++) [dx, dy] = [-dy, dx];
+        return { x: center.x + dx, y: center.y + dy };
+      }
+
+      function transformObstacle(item, scale, layout) {
+        const point = transformPoint({ x: item.x + item.w / 2, y: item.y + item.h / 2 }, scale, layout);
+        const swapDimensions = layout.turns % 2 === 1;
+        const w = (swapDimensions ? item.h : item.w) * scale;
+        const h = (swapDimensions ? item.w : item.h) * scale;
+        return { ...item, x: point.x - w / 2, y: point.y - h / 2, w, h };
+      }
+
+      function setupLevel() {
+        keys.clear();
+        const config = levels[currentLevel];
+        document.querySelectorAll("#level-progress > span").forEach((step, index) => {
+          step.classList.toggle("active", index === currentLevel);
+          step.classList.toggle("complete", index < currentLevel);
+        });
+        const scale = config.radius / baseRadius;
+        radius = config.radius;
+        exitAngle = config.exitAngle;
+        exit = { x: center.x + Math.cos(exitAngle) * radius, y: center.y + Math.sin(exitAngle) * radius };
+        obstacles = [...baseObstacles, ...config.extra].map(item => transformObstacle(item, scale, config.layout));
+        protest = scalePoint(config.playerStart, scale);
+        const routes = (currentLevel === 0 ? noobPatrolRoutes : [...patrolRoutes, ...extraPatrolRoutes])
+          .map(route => route.map(point => transformPoint(point, scale, config.layout)))
+          .map(route => ({
+            route,
+            nearestSpawnDistance: Math.min(...route.map(point => Math.hypot(point.x - protest.x, point.y - protest.y)))
+          }))
+          .sort((a, b) => b.nearestSpawnDistance - a.nearestSpawnDistance)
+          .slice(0, config.police);
+        police = routes.map(({ route }, i) => {
+          const startIndex = route.reduce((farthestIndex, point, index) =>
+            Math.hypot(point.x - protest.x, point.y - protest.y) >
+            Math.hypot(route[farthestIndex].x - protest.x, route[farthestIndex].y - protest.y)
+              ? index
+              : farthestIndex, 0);
+          const start = route[startIndex];
+          return {
+            x: start.x,
+            y: start.y,
+            route,
+            target: (startIndex + 1) % route.length,
+            speed: config.speed + (i % 2) * 5
+          };
+        });
+        player = { ...protest, speed: 172 };
+        levelCleared = 0;
+      }
+
+      function reset() {
+        currentLevel = 0;
+        setupLevel();
+        elapsed = 0;
+        mode = "playing";
+        nextLevelButton.hidden = true;
+        pauseButton.textContent = "PAUSE [SPACE]";
+        draw();
+      }
+
+      function circleRect(x, y, r, rect) {
+        const nearestX = Math.max(rect.x, Math.min(x, rect.x + rect.w));
+        const nearestY = Math.max(rect.y, Math.min(y, rect.y + rect.h));
+        return (x - nearestX) ** 2 + (y - nearestY) ** 2 < r ** 2;
+      }
+
+      function collides(x, y, r) {
+        return obstacles.some(rect => circleRect(x, y, r, rect));
+      }
+
+      function withinArena(x, y) {
+        return Math.hypot(x - center.x, y - center.y) <= radius - playerRadius;
+      }
+
+      function angleToExit(x, y) {
+        const angle = Math.atan2(y - center.y, x - center.x);
+        return Math.abs(Math.atan2(Math.sin(angle - exitAngle), Math.cos(angle - exitAngle)));
+      }
+
+      function moveActor(actor, dx, dy, r) {
+        const nx = actor.x + dx;
+        const ny = actor.y + dy;
+        if (withinArena(nx, actor.y) && !collides(nx, actor.y, r)) actor.x = nx;
+        if (withinArena(actor.x, ny) && !collides(actor.x, ny, r)) actor.y = ny;
+      }
+
+      function movePolice(officer, dt) {
+        const dx = player.x - officer.x;
+        const dy = player.y - officer.y;
+        const distance = Math.hypot(dx, dy);
+        let target;
+        let speed = officer.speed;
+        if (distance < levels[currentLevel].chaseRange) {
+          target = { x: player.x, y: player.y };
+          speed = levels[currentLevel].chaseSpeed;
+        } else {
+          target = officer.route[officer.target];
+          if (Math.hypot(target.x - officer.x, target.y - officer.y) < 9) {
+            officer.target = (officer.target + 1) % officer.route.length;
+            target = officer.route[officer.target];
+          }
+        }
+        const vx = target.x - officer.x;
+        const vy = target.y - officer.y;
+        const length = Math.hypot(vx, vy) || 1;
+        const mx = vx / length * speed * dt;
+        const my = vy / length * speed * dt;
+        const oldX = officer.x;
+        const oldY = officer.y;
+        moveActor(officer, mx, my, 8);
+        if (oldX === officer.x && oldY === officer.y) {
+          moveActor(officer, -my, mx, 8);
+          if (oldX === officer.x && oldY === officer.y) moveActor(officer, my, -mx, 8);
+        }
+      }
+
+      function update(dt) {
+        if (mode === "escaped" && currentLevel < levels.length - 1) {
+          levelCleared += dt;
+          if (levelCleared >= 1.7) startNextLevel();
+          else draw();
+          return;
+        }
+        if (mode !== "playing") return;
+        elapsed += dt;
+        let dx = 0;
+        let dy = 0;
+        if (keys.has("ArrowLeft") || keys.has("a")) dx--;
+        if (keys.has("ArrowRight") || keys.has("d")) dx++;
+        if (keys.has("ArrowUp") || keys.has("w")) dy--;
+        if (keys.has("ArrowDown") || keys.has("s")) dy++;
+        if (dx || dy) {
+          const length = Math.hypot(dx, dy);
+          moveActor(player, dx / length * player.speed * dt, dy / length * player.speed * dt, playerRadius);
+        }
+
+        for (const officer of police) {
+          movePolice(officer, dt);
+          if (Math.hypot(player.x - officer.x, player.y - officer.y) < 17) {
+            mode = "caught";
+            break;
+          }
+        }
+
+        const fromCenter = Math.hypot(player.x - center.x, player.y - center.y);
+        if (fromCenter >= radius - playerRadius - 1 && angleToExit(player.x, player.y) < 0.19) {
+          mode = currentLevel === levels.length - 1 ? "complete" : "escaped";
+          nextLevelButton.hidden = mode !== "escaped";
+        }
+        draw();
+      }
+
+      function rect(x, y, w, h, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+      }
+
+      function text(value, x, y, size, color = C.paper, align = "center") {
+        ctx.fillStyle = color;
+        ctx.font = `bold ${size}px "Courier New", monospace`;
+        ctx.textAlign = align;
+        ctx.textBaseline = "middle";
+        ctx.fillText(value, x, y);
+      }
+
+      function drawArena() {
+        ctx.fillStyle = C.ink;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = C.green;
+        ctx.fill();
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = C.paper;
+        ctx.stroke();
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius - 4, 0, Math.PI * 2);
+        ctx.clip();
+        for (let y = 60; y < 600; y += 18) {
+          for (let x = 190; x < 780; x += 18) {
+            if ((x + y) % 3 === 0) rect(x, y, 2, 2, C.paper);
+          }
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius - 3, 0, Math.PI * 2);
+        ctx.clip();
+        for (const item of obstacles) {
+          if (item.type === "building") {
+            rect(item.x, item.y, item.w, item.h, C.ink);
+            rect(item.x + 8, item.y + 8, item.w - 16, 5, C.paper);
+            for (let wx = item.x + 13; wx < item.x + item.w - 12; wx += 25) {
+              rect(wx, item.y + 25, 8, 8, C.green);
+              rect(wx, item.y + 49, 8, 8, C.green);
+            }
+            rect(item.x + item.w / 2 - 8, item.y + item.h - 18, 16, 18, C.red);
+          } else if (item.type === "bus") {
+            rect(item.x, item.y + 4, item.w, item.h - 8, C.red);
+            rect(item.x + 10, item.y + 8, item.w - 20, 13, C.paper);
+            for (let wx = item.x + 15; wx < item.x + item.w - 18; wx += 22) rect(wx, item.y + 10, 12, 9, C.green);
+            rect(item.x + 13, item.y, 16, 5, C.ink);
+            rect(item.x + item.w - 29, item.y + item.h - 5, 16, 5, C.ink);
+          } else {
+            rect(item.x, item.y, item.w, item.h, "#f2c744");
+            for (let bx = item.x + 5; bx < item.x + item.w; bx += 18) rect(bx, item.y + 2, 7, 8, C.ink);
+          }
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(exit.x, exit.y);
+        ctx.rotate(exitAngle + Math.PI / 2);
+        rect(-31, -11, 62, 22, C.paper);
+        rect(-25, -7, 50, 14, C.green);
+        ctx.restore();
+        text("EXIT", exit.x - Math.cos(exitAngle) * 28, exit.y - Math.sin(exitAngle) * 28, 15, C.paper);
+        text("PROTEST", protest.x, protest.y + 45, 13, C.paper);
+        rect(protest.x - 8, protest.y + 19, 5, 13, C.red);
+        rect(protest.x + 2, protest.y + 15, 5, 17, C.red);
+        rect(protest.x + 12, protest.y + 22, 5, 10, C.red);
+      }
+
+      function drawPerson(x, y, color, isPlayer = false) {
+        const px = Math.round(x);
+        const py = Math.round(y);
+        rect(px - 6, py - 5, 12, 12, C.ink);
+        rect(px - 5, py - 8, 10, 10, color);
+        rect(px - 4, py - 7, 8, 4, C.paper);
+        rect(px - 4, py + 6, 3, 4, C.ink);
+        rect(px + 1, py + 6, 3, 4, C.ink);
+        if (isPlayer) {
+          rect(px - 2, py - 2, 4, 4, C.red);
+        } else {
+          rect(px - 2, py - 2, 4, 4, C.ink);
+          rect(px - 1, py - 7, 2, 3, C.red);
+        }
+      }
+
+      function draw() {
+        drawArena();
+        for (const officer of police) drawPerson(officer.x, officer.y, C.red);
+        drawPerson(player.x, player.y, C.paper, true);
+
+        const closest = Math.min(...police.map(officer => Math.hypot(player.x - officer.x, player.y - officer.y)));
+        rect(18, 16, 188, 38, C.ink);
+        text(closest < 100 ? "DANGER: THEY SEE YOU" : "KEEP MOVING", 30, 31, 13, closest < 100 ? C.red : C.paper, "left");
+        text(`${Math.floor(elapsed / 60).toString().padStart(2, "0")}:${Math.floor(elapsed % 60).toString().padStart(2, "0")}`, 925, 33, 17, C.paper, "right");
+        text(`LEVEL ${currentLevel + 1} / ${levels.length}  ${levels[currentLevel].name}`, 480, 32, 14, C.paper);
+        text("ARROWS / WASD TO MOVE", 480, 605, 12, C.paper);
+
+        if (mode === "paused" || mode === "escaped" || mode === "caught" || mode === "complete") {
+          rect(0, 0, canvas.width, canvas.height, C.ink);
+          ctx.globalAlpha = 0.86;
+          rect(0, 0, canvas.width, canvas.height, C.ink);
+          ctx.globalAlpha = 1;
+          const title = mode === "escaped" ? `${levels[currentLevel].name} CLEARED!` : mode === "complete" ? "Congratulations! You are now a pro-level Citizen" : mode === "caught" ? "YOU'RE BEING DETAINED" : "PAUSED";
+          const subtitle = mode === "escaped" ? `NEXT UP: ${levels[currentLevel + 1].name}` : mode === "caught" ? "THE CROWD WILL TRY AGAIN." : "PRESS SPACE TO GET MOVING";
+          text(title, 480, mode === "complete" ? 278 : 280, mode === "complete" ? 21 : 34, mode === "escaped" || mode === "complete" ? C.green : mode === "caught" ? C.red : C.paper);
+          if (mode === "complete") text("INQUILAB ZINDABAD", 480, 326, 17, C.red);
+          else text(subtitle, 480, 326, 15, C.paper);
+          text(mode === "escaped" ? "PRESS ENTER OR NEXT LEVEL TO CONTINUE" : "PRESS R OR RESTART TO PLAY AGAIN", 480, 373, 13, C.paper);
+        }
+      }
+
+      function frame(timestamp) {
+        const dt = Math.min((timestamp - lastFrame) / 1000, 0.04);
+        lastFrame = timestamp;
+        update(dt);
+        animationId = requestAnimationFrame(frame);
+      }
+
+      function togglePause() {
+        if (mode === "playing") {
+          mode = "paused";
+          pauseButton.textContent = "RESUME [SPACE]";
+        } else if (mode === "paused") {
+          mode = "playing";
+          pauseButton.textContent = "PAUSE [SPACE]";
+          lastFrame = performance.now();
+        }
+        draw();
+      }
+
+      function startNextLevel() {
+        if (mode !== "escaped" || currentLevel >= levels.length - 1) return;
+        currentLevel++;
+        setupLevel();
+        mode = "playing";
+        elapsed = 0;
+        nextLevelButton.hidden = true;
+        pauseButton.textContent = "PAUSE [SPACE]";
+        lastFrame = performance.now();
+        draw();
+      }
+
+      document.addEventListener("keydown", event => {
+        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
+        if (event.key.toLowerCase() === "r") reset();
+        else if (event.key === "Enter") startNextLevel();
+        else if (event.code === "Space" && !event.repeat) togglePause();
+        else keys.add(event.key.length === 1 ? event.key.toLowerCase() : event.key);
+      });
+      document.addEventListener("keyup", event => keys.delete(event.key.length === 1 ? event.key.toLowerCase() : event.key));
+      window.addEventListener("blur", () => keys.clear());
+      restartButton.addEventListener("click", reset);
+      pauseButton.addEventListener("click", togglePause);
+      nextLevelButton.addEventListener("click", startNextLevel);
+      document.querySelectorAll(".pad button").forEach(button => {
+        const dir = button.dataset.dir;
+        const mapping = { up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight" };
+        button.addEventListener("pointerdown", event => {
+          event.preventDefault();
+          keys.add(mapping[dir]);
+          button.setPointerCapture(event.pointerId);
+        });
+        const release = () => keys.delete(mapping[dir]);
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("lostpointercapture", release);
+      });
+
+      reset();
+      animationId = requestAnimationFrame(frame);
+      window.addEventListener("pagehide", () => cancelAnimationFrame(animationId), { once: true });
+    })();
+  </script>
+</body>
+</html>
