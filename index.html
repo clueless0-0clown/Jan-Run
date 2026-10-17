@@ -219,7 +219,7 @@
         <p>Choose where to continue:</p>
         <div class="caught-actions">
           <button id="retry-level" type="button">RETRY LEVEL <span id="retry-level-number">01</span> [R]</button>
-          <button id="restart-level-one" type="button">Restart from beginning [1]</button>
+          <button id="restart-level-one" type="button">Restart from beginning [B]</button>
         </div>
       </div>
       <div class="completion-screen" id="completion-screen" hidden>
@@ -253,7 +253,7 @@
         <ul class="controls">
           <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / arrows — move</li>
           <li><kbd>R</kbd> — restart / retry current level when caught</li>
-          <li><kbd>1</kbd> — restart from the beginning when caught</li>
+          <li><kbd>B</kbd> — restart from the beginning when caught</li>
           <li><kbd>SPACE</kbd> — pause</li>
         </ul>
       </div>
@@ -682,7 +682,7 @@
         if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
         if (mode === "intro") return;
         if (event.key.toLowerCase() === "r") restart();
-        else if (event.key === "1" && mode === "caught") restartFromLevelOne();
+        else if (event.key.toLowerCase() === "b" && mode === "caught") restartFromLevelOne();
         else if (event.code === "Space" && !event.repeat) togglePause();
         else keys.add(event.key.length === 1 ? event.key.toLowerCase() : event.key);
       });
