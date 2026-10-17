@@ -63,11 +63,29 @@
     .intro button { min-width: 210px; min-height: 54px; font-size: 17px; }
 
     .screen {
+      position: relative;
       min-width: 0;
       border: 4px solid var(--paper);
       background: var(--ink);
       box-shadow: 8px 8px 0 var(--green);
     }
+
+    .caught-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 24px;
+      background: rgb(23 33 43 / 94%);
+      text-align: center;
+    }
+    .caught-overlay h2 { margin: 0; color: var(--red); font-size: clamp(24px, 5vw, 40px); }
+    .caught-overlay p { margin: 0; line-height: 1.5; }
+    .caught-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .caught-actions button { min-height: 48px; }
 
     .completion-screen {
       min-height: 560px;
@@ -195,6 +213,15 @@
   <main class="game" id="game-screen" hidden>
     <section class="screen" aria-label="Protest escape game">
       <canvas id="game" width="960" height="640" aria-label="Top-down escape game. Use the arrow keys or WASD to reach the green exit and avoid 'You Know Who'."></canvas>
+      <div class="caught-overlay" id="caught-overlay" role="dialog" aria-labelledby="caught-title" aria-describedby="caught-description" hidden>
+        <h2 id="caught-title">YOU'VE BEEN DETAINED</h2>
+        <p id="caught-description">DON'T LOSE HOPE! KEEP UP THE FIGHT</p>
+        <p>Choose where to continue:</p>
+        <div class="caught-actions">
+          <button id="retry-level" type="button">RETRY LEVEL <span id="retry-level-number">01</span> [R]</button>
+          <button id="restart-level-one" type="button">RESTART AT LEVEL 01 [1]</button>
+        </div>
+      </div>
       <div class="completion-screen" id="completion-screen" hidden>
         <h2>Congratulations<br>You're now a Constitution-approved Citizen</h2>
         <p class="completion-slogan">INQUILAB ZINDABAD</p>
@@ -225,7 +252,8 @@
         <div class="label">Controls</div>
         <ul class="controls">
           <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / arrows — move</li>
-          <li><kbd>R</kbd> — restart</li>
+          <li><kbd>R</kbd> — restart / retry current level when caught</li>
+          <li><kbd>1</kbd> — restart at Level 01 when caught</li>
           <li><kbd>SPACE</kbd> — pause</li>
         </ul>
       </div>
@@ -247,10 +275,14 @@
       const canvas = document.getElementById("game");
       const ctx = canvas.getContext("2d");
       const completionScreen = document.getElementById("completion-screen");
+      const caughtOverlay = document.getElementById("caught-overlay");
       const introScreen = document.getElementById("intro-screen");
       const gameScreen = document.getElementById("game-screen");
       const startButton = document.getElementById("start-game");
       const restartButton = document.getElementById("restart");
+      const retryLevelButton = document.getElementById("retry-level");
+      const restartLevelOneButton = document.getElementById("restart-level-one");
+      const retryLevelNumber = document.getElementById("retry-level-number");
       const pauseButton = document.getElementById("pause");
       const C = { ink: "#17212b", paper: "#f2e9d0", red: "#d95d4f", green: "#4e9a83" };
       const center = { x: 480, y: 320 };
@@ -386,6 +418,11 @@
       function restart() {
         if (mode === "caught") startLevel();
         else reset();
+      }
+
+      function restartFromLevelOne() {
+        currentLevel = 0;
+        startLevel();
       }
 
       function circleRect(x, y, r, rect) {
@@ -575,10 +612,15 @@
         if (mode === "complete") {
           canvas.hidden = true;
           completionScreen.hidden = false;
+          caughtOverlay.hidden = true;
           return;
         }
         canvas.hidden = false;
         completionScreen.hidden = true;
+        const caughtOverlayWasHidden = caughtOverlay.hidden;
+        caughtOverlay.hidden = mode !== "caught";
+        if (mode === "caught" && caughtOverlayWasHidden) retryLevelButton.focus();
+        retryLevelNumber.textContent = String(currentLevel + 1).padStart(2, "0");
         drawArena();
         for (const officer of police) drawPerson(officer.x, officer.y, C.red);
         drawPerson(player.x, player.y, C.paper, true);
@@ -590,18 +632,18 @@
         text(`LEVEL ${currentLevel + 1} / ${levels.length}  ${levels[currentLevel].name}`, 480, 32, 17, C.paper);
         text("ARROWS / WASD TO MOVE", 480, 605, 18, C.paper);
 
-        if (mode === "paused" || mode === "escaped" || mode === "caught" || mode === "complete") {
+        if (mode === "paused" || mode === "escaped" || mode === "complete") {
           rect(0, 0, canvas.width, canvas.height, C.ink);
           ctx.globalAlpha = 0.86;
           rect(0, 0, canvas.width, canvas.height, C.ink);
           ctx.globalAlpha = 1;
-          const title = mode === "escaped" ? `${levels[currentLevel].name} CLEARED!` : mode === "complete" ? "Congratulations! You're now a Constitution-approved Citizen" : mode === "caught" ? "YOU'VE BEEN DETAINED" : "PAUSED";
-          const subtitle = mode === "escaped" ? `NEXT UP: ${levels[currentLevel + 1].name}` : mode === "caught" ? "DON'T LOSE HOPE! KEEP UP THE FIGHT" : "PRESS SPACE TO GET MOVING";
-          text(title, 480, mode === "complete" ? 278 : 280, mode === "complete" ? 25 : 40, mode === "escaped" || mode === "complete" ? C.green : mode === "caught" ? C.red : C.paper);
+          const title = mode === "escaped" ? `${levels[currentLevel].name} CLEARED!` : mode === "complete" ? "Congratulations! You're now a Constitution-approved Citizen" : "PAUSED";
+          const subtitle = mode === "escaped" ? `NEXT UP: ${levels[currentLevel + 1].name}` : "PRESS SPACE TO GET MOVING";
+          text(title, 480, mode === "complete" ? 278 : 280, mode === "complete" ? 25 : 40, mode === "escaped" || mode === "complete" ? C.green : C.paper);
           if (mode === "complete") text("INQUILAB ZINDABAD", 480, 326, 20, C.red);
           else text(subtitle, 480, 326, 18, C.paper);
           const transitionText = `NEXT LEVEL STARTING IN ${Math.ceil(levelTransitionDuration - levelCleared)}...`;
-          const restartText = mode === "caught" ? "PRESS R OR RESTART TO RETRY THIS LEVEL" : "PRESS R OR RESTART TO PLAY AGAIN";
+          const restartText = "PRESS R OR RESTART TO PLAY AGAIN";
           text(mode === "escaped" ? transitionText : restartText, 480, 373, 16, C.paper);
         }
       }
@@ -640,6 +682,7 @@
         if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
         if (mode === "intro") return;
         if (event.key.toLowerCase() === "r") restart();
+        else if (event.key === "1" && mode === "caught") restartFromLevelOne();
         else if (event.code === "Space" && !event.repeat) togglePause();
         else keys.add(event.key.length === 1 ? event.key.toLowerCase() : event.key);
       });
@@ -651,6 +694,8 @@
         reset();
       });
       restartButton.addEventListener("click", restart);
+      retryLevelButton.addEventListener("click", restart);
+      restartLevelOneButton.addEventListener("click", restartFromLevelOne);
       pauseButton.addEventListener("click", togglePause);
       document.querySelectorAll(".pad button").forEach(button => {
         const dir = button.dataset.dir;
