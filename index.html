@@ -369,13 +369,23 @@
         levelCleared = 0;
       }
 
-      function reset() {
-        currentLevel = 0;
+      function startLevel() {
         setupLevel();
         elapsed = 0;
         mode = "playing";
         pauseButton.textContent = "PAUSE [SPACE]";
+        lastFrame = performance.now();
         draw();
+      }
+
+      function reset() {
+        currentLevel = 0;
+        startLevel();
+      }
+
+      function restart() {
+        if (mode === "caught") startLevel();
+        else reset();
       }
 
       function circleRect(x, y, r, rect) {
@@ -591,7 +601,8 @@
           if (mode === "complete") text("INQUILAB ZINDABAD", 480, 326, 20, C.red);
           else text(subtitle, 480, 326, 18, C.paper);
           const transitionText = `NEXT LEVEL STARTING IN ${Math.ceil(levelTransitionDuration - levelCleared)}...`;
-          text(mode === "escaped" ? transitionText : "PRESS R OR RESTART TO PLAY AGAIN", 480, 373, 16, C.paper);
+          const restartText = mode === "caught" ? "PRESS R OR RESTART TO RETRY THIS LEVEL" : "PRESS R OR RESTART TO PLAY AGAIN";
+          text(mode === "escaped" ? transitionText : restartText, 480, 373, 16, C.paper);
         }
       }
 
@@ -628,7 +639,7 @@
       document.addEventListener("keydown", event => {
         if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
         if (mode === "intro") return;
-        if (event.key.toLowerCase() === "r") reset();
+        if (event.key.toLowerCase() === "r") restart();
         else if (event.code === "Space" && !event.repeat) togglePause();
         else keys.add(event.key.length === 1 ? event.key.toLowerCase() : event.key);
       });
@@ -639,7 +650,7 @@
         gameScreen.hidden = false;
         reset();
       });
-      restartButton.addEventListener("click", reset);
+      restartButton.addEventListener("click", restart);
       pauseButton.addEventListener("click", togglePause);
       document.querySelectorAll(".pad button").forEach(button => {
         const dir = button.dataset.dir;
